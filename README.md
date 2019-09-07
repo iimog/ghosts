@@ -1,2 +1,0 @@
-# ghosts
-Created with CodeSandbox
