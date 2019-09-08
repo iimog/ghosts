@@ -13,14 +13,14 @@ type Phase = "assignment" | "running" | "won";
 type Direction = "u" | "d" | "l" | "r";
 type Position = { x: number; y: number };
 
-interface Piece {
+export interface Piece {
   owner: Player;
   alignment: Alignment;
 }
 
 type PlayerStats = { [alignment in Alignment]: number };
 
-interface State {
+export interface State {
   board: Array<Piece | null>;
   turn: Player;
   phase: Phase;
@@ -178,7 +178,7 @@ function other(player: Player) {
   return player === "A" ? "B" : "A";
 }
 
-const store = configureStore({
+export const store = configureStore({
   reducer: gameSlice.reducer,
   middleware: [...getDefaultMiddleware(), gameLogic]
 });

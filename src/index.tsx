@@ -1,20 +1,11 @@
 import * as React from "react";
 import { render } from "react-dom";
+import { Provider } from "react-redux";
 
 import "./styles.css";
-import "./logic/game";
+import { store } from "./logic/game";
 
-function Square() {
-  return <div className="Square" />;
-}
-
-function Board() {
-  let squares = Array(36);
-  for (let i = 0; i < 36; i++) {
-    squares[i] = <Square key={i} />;
-  }
-  return <div className="Board">{squares}</div>;
-}
+import Board from "./components/Board";
 
 function App() {
   return (
@@ -27,4 +18,9 @@ function App() {
 }
 
 const rootElement = document.getElementById("root");
-render(<App />, rootElement);
+render(
+  <Provider store={store}>
+    <App />
+  </Provider>,
+  rootElement
+);
