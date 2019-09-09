@@ -119,7 +119,7 @@ const gameLogic: Middleware<any, State> = api => next => action => {
       if (target.owner === state.turn) {
         throw new Error("do you want to kill your own ghost?");
       }
-      api.dispatch(gameSlice.actions.ghostMarkedEvil(targetPos));
+      api.dispatch(gameSlice.actions.ghostKilled(targetPos));
     }
     api.dispatch(gameSlice.actions.ghostMoved({ direction, ...position }));
     state = api.getState();
@@ -127,7 +127,7 @@ const gameLogic: Middleware<any, State> = api => next => action => {
       api.dispatch(gameSlice.actions.changePhase("won"));
     }
 
-    gameSlice.actions.turnChangedTo(other(state.turn));
+    api.dispatch(gameSlice.actions.turnChangedTo(other(state.turn)));
 
     const enemyHomeRow = state.turn === "A" ? 5 : 0;
     if (
@@ -234,4 +234,6 @@ store.dispatch(gameSlice.actions.markEvil({ x: 3, y: 1 }));
 store.dispatch(gameSlice.actions.markEvil({ x: 3, y: 4 }));
 store.dispatch(gameSlice.actions.markEvil({ x: 4, y: 1 }));
 store.dispatch(gameSlice.actions.markEvil({ x: 4, y: 4 }));
+store.dispatch(gameSlice.actions.move({ x: 1, y: 1, direction: "d" }));
+store.dispatch(gameSlice.actions.move({ x: 2, y: 4, direction: "u" }));
 print(store.getState());

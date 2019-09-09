@@ -6,6 +6,10 @@ function Square(props: { piece: Piece | null }) {
   let owner = "";
   if (props.piece !== null) {
     owner = props.piece.owner;
+    let ali = props.piece.alignment;
+    if (ali === "good") {
+      owner = owner.toLowerCase();
+    }
   }
   return <div className="Square"> {owner} </div>;
 }
