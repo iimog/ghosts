@@ -1,11 +1,12 @@
 import * as React from "react";
 import { shallowEqual, useSelector, useDispatch } from "react-redux";
-import { State, Piece, Direction, gameSlice } from "../logic/game";
+import { State, Piece, Direction, Player, gameSlice } from "../logic/game";
 
 function Square(props: {
   piece: Piece | null;
   onClick: (index: number) => void;
   selected: boolean;
+  turn: Player;
 }) {
   let owner = "";
   if (props.piece !== null) {
@@ -13,6 +14,9 @@ function Square(props: {
     let ali = props.piece.alignment;
     if (ali === "good") {
       owner = owner.toLowerCase();
+    }
+    if (props.piece.owner !== props.turn) {
+      owner = "X";
     }
   }
   let color = props.selected ? "orange" : "lightgrey";
@@ -73,6 +77,7 @@ export default function Board() {
         piece={selectedData.board[i]}
         onClick={clickOnField(i)}
         selected={selectedField === i}
+        turn={selectedData.turn}
       />
     );
   }

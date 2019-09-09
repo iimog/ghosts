@@ -7,10 +7,10 @@ import {
   Action
 } from "redux-starter-kit";
 
-type Player = "A" | "B";
+export type Player = "A" | "B";
 type Alignment = "good" | "evil";
 type Phase = "assignment" | "running" | "won";
-type Direction = "u" | "d" | "l" | "r";
+export type Direction = "u" | "d" | "l" | "r";
 type Position = { x: number; y: number };
 
 export interface Piece {
@@ -234,6 +234,4 @@ store.dispatch(gameSlice.actions.markEvil({ x: 3, y: 1 }));
 store.dispatch(gameSlice.actions.markEvil({ x: 3, y: 4 }));
 store.dispatch(gameSlice.actions.markEvil({ x: 4, y: 1 }));
 store.dispatch(gameSlice.actions.markEvil({ x: 4, y: 4 }));
-store.dispatch(gameSlice.actions.move({ x: 1, y: 1, direction: "d" }));
-store.dispatch(gameSlice.actions.move({ x: 2, y: 4, direction: "u" }));
 print(store.getState());
