@@ -49,7 +49,7 @@ const initialState: State = {
   }
 };
 
-const gameSlice = createSlice({
+export const gameSlice = createSlice({
   initialState,
   reducers: {
     markEvil(_state, _action: PayloadAction<Position>) {},
