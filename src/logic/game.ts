@@ -125,12 +125,16 @@ const gameLogic: Middleware<any, State> = api => next => action => {
     state = api.getState();
     if (state.stats[other(state.turn)].good === 0) {
       api.dispatch(gameSlice.actions.changePhase("won"));
+      return;
     }
+    state = api.getState();
 
     api.dispatch(gameSlice.actions.turnChangedTo(other(state.turn)));
+
     state = api.getState();
     if (state.stats[state.turn].evil === 0) {
       api.dispatch(gameSlice.actions.changePhase("won"));
+      return;
     }
     const enemyHomeRow = state.turn === "A" ? 5 : 0;
     if (
@@ -144,6 +148,7 @@ const gameLogic: Middleware<any, State> = api => next => action => {
       )
     ) {
       api.dispatch(gameSlice.actions.changePhase("won"));
+      return;
     }
   }
 
