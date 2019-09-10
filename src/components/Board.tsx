@@ -35,7 +35,7 @@ function Square(props: {
   );
 }
 
-function InfoBox(props: { phase: Phase }) {
+function InfoBox(props: { phase: Phase; turn: Player; winner: Player | "" }) {
   return (
     <div>
       <table>
@@ -43,6 +43,10 @@ function InfoBox(props: { phase: Phase }) {
           <tr>
             <th>Phase:</th>
             <td>{props.phase}</td>
+          </tr>
+          <tr>
+            <th>Turn:</th>
+            <td>{props.turn}</td>
           </tr>
           <tr>
             <th>Winner:</th>
@@ -112,7 +116,11 @@ export default function Board() {
   return (
     <div className="Board">
       {squares}
-      <InfoBox phase={selectedData.phase} winner={winner} />
+      <InfoBox
+        phase={selectedData.phase}
+        winner={winner}
+        turn={selectedData.turn}
+      />
     </div>
   );
 }

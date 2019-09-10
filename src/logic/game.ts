@@ -128,7 +128,7 @@ const gameLogic: Middleware<any, State> = api => next => action => {
     }
 
     api.dispatch(gameSlice.actions.turnChangedTo(other(state.turn)));
-
+    state = api.getState();
     if (state.stats[state.turn].evil === 0) {
       api.dispatch(gameSlice.actions.changePhase("won"));
     }
