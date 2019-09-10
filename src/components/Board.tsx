@@ -71,16 +71,28 @@ export default function Board() {
   );
   const dispatch = useDispatch();
   const [selectedField, setSelectedField] = React.useState(-1);
+  const isOwnGhost = (piece: Piece | null, turn: Player) =>
+    piece !== null && piece.owner === turn;
   const clickOnField = (index: number) => {
     return () => {
+      if (selectedData.phase === "won") {
+        return;
+      }
       let piece = selectedData.board[index];
-      if (piece === null || piece.owner !== selectedData.turn) {
-        if (selectedField < 0) {
+      if (isOwnGhost(piece, selectedData.turn)) {
+        if (selectedData.phase === "running") {
+          setSelectedField(index);
+        }
+        if (selectedData.phase === "assignment") {
+          dispatch(gameSlice.actions.markEvil(boardCoord(index)));
+        }
+      } else {
+        if (selectedData.phase !== "running" || selectedField < 0) {
           return;
         }
         try {
           let oldPos = boardCoord(selectedField);
-          let direction: Direction = getDirection(selectedField, index);
+          let direction: Direction | null = getDirection(selectedField, index);
           if (direction === null) {
             return;
           }
@@ -97,7 +109,6 @@ export default function Board() {
         }
         return;
       }
-      setSelectedField(index);
     };
   };
   for (let i = 0; i < 36; i++) {

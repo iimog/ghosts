@@ -229,12 +229,12 @@ function print(state: State) {
 }
 
 print(store.getState());
-store.dispatch(gameSlice.actions.markEvil({ x: 1, y: 1 }));
-store.dispatch(gameSlice.actions.markEvil({ x: 1, y: 4 }));
-store.dispatch(gameSlice.actions.markEvil({ x: 2, y: 1 }));
-store.dispatch(gameSlice.actions.markEvil({ x: 2, y: 4 }));
-store.dispatch(gameSlice.actions.markEvil({ x: 3, y: 1 }));
-store.dispatch(gameSlice.actions.markEvil({ x: 3, y: 4 }));
-store.dispatch(gameSlice.actions.markEvil({ x: 4, y: 1 }));
-store.dispatch(gameSlice.actions.markEvil({ x: 4, y: 4 }));
-print(store.getState());
+//store.dispatch(gameSlice.actions.markEvil({ x: 1, y: 1 }));
+//store.dispatch(gameSlice.actions.markEvil({ x: 1, y: 4 }));
+//store.dispatch(gameSlice.actions.markEvil({ x: 2, y: 1 }));
+//store.dispatch(gameSlice.actions.markEvil({ x: 2, y: 4 }));
+//store.dispatch(gameSlice.actions.markEvil({ x: 3, y: 1 }));
+//store.dispatch(gameSlice.actions.markEvil({ x: 3, y: 4 }));
+//store.dispatch(gameSlice.actions.markEvil({ x: 4, y: 1 }));
+//store.dispatch(gameSlice.actions.markEvil({ x: 4, y: 4 }));
+//print(store.getState());
