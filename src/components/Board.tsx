@@ -108,6 +108,7 @@ export default function Board() {
         }
         if (selectedData.phase === "assignment") {
           dispatch(gameSlice.actions.markEvil(boardCoord(index)));
+          setMasked(true);
         }
       } else {
         if (selectedData.phase !== "running" || selectedField < 0) {
@@ -127,6 +128,7 @@ export default function Board() {
             })
           );
           setSelectedField(-1);
+          setMasked(true);
         } catch (e) {
           console.log(e.message);
         }
