@@ -10,11 +10,15 @@ import {
   gameSlice
 } from "../logic/game";
 
+const mask = (player: Player) => (player === "A" ? "X" : "O");
+
 function Square(props: {
   piece: Piece | null;
   onClick: (index: number) => void;
   selected: boolean;
   turn: Player;
+  masked: boolean;
+  gameOver: boolean;
 }) {
   let owner = "";
   if (props.piece !== null) {
@@ -23,8 +27,8 @@ function Square(props: {
     if (ali === "good") {
       owner = owner.toLowerCase();
     }
-    if (props.piece.owner !== props.turn) {
-      owner = "X";
+    if (props.masked || (!props.gameOver && props.piece.owner !== props.turn)) {
+      owner = mask(props.piece.owner);
     }
   }
   let color = props.selected ? "orange" : "lightgrey";
@@ -89,6 +93,7 @@ export default function Board() {
   );
   const dispatch = useDispatch();
   const [selectedField, setSelectedField] = React.useState(-1);
+  const [masked, setMasked] = React.useState(true);
   const isOwnGhost = (piece: Piece | null, turn: Player) =>
     piece !== null && piece.owner === turn;
   const clickOnField = (index: number) => {
@@ -137,6 +142,8 @@ export default function Board() {
         onClick={clickOnField(i)}
         selected={selectedField === i}
         turn={selectedData.turn}
+        masked={masked}
+        gameOver={selectedData.phase === "won"}
       />
     );
   }
@@ -151,12 +158,18 @@ export default function Board() {
         turn={selectedData.turn}
         stats={selectedData.stats}
       />
+      <MaskButton masked={masked} onClick={() => setMasked(!masked)} />
     </div>
   );
 }
 
 const boardCoord = (index: number) => {
   return { x: index % 6, y: Math.floor(index / 6) };
+};
+
+const MaskButton = props => {
+  const text = props.masked ? "Unmask!" : "Mask!";
+  return <button {...props}> {text} </button>;
 };
 
 const getDirection = (source: number, target: number) => {
