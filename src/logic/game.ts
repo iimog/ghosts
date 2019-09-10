@@ -8,10 +8,10 @@ import {
 } from "redux-starter-kit";
 
 export type Player = "A" | "B";
-type Alignment = "good" | "evil";
-type Phase = "assignment" | "running" | "won";
+export type Alignment = "good" | "evil";
+export type Phase = "assignment" | "running" | "won";
 export type Direction = "u" | "d" | "l" | "r";
-type Position = { x: number; y: number };
+export type Position = { x: number; y: number };
 
 export interface Piece {
   owner: Player;

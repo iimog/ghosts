@@ -1,6 +1,13 @@
 import * as React from "react";
 import { shallowEqual, useSelector, useDispatch } from "react-redux";
-import { State, Piece, Direction, Player, gameSlice } from "../logic/game";
+import {
+  State,
+  Piece,
+  Direction,
+  Player,
+  Phase,
+  gameSlice
+} from "../logic/game";
 
 function Square(props: {
   piece: Piece | null;
@@ -25,6 +32,25 @@ function Square(props: {
       {" "}
       {owner}{" "}
     </button>
+  );
+}
+
+function InfoBox(props: { phase: Phase }) {
+  return (
+    <div>
+      <table>
+        <tbody>
+          <tr>
+            <th>Phase:</th>
+            <td>{props.phase}</td>
+          </tr>
+          <tr>
+            <th>Winner:</th>
+            <td>{props.winner}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -82,7 +108,13 @@ export default function Board() {
     );
   }
 
-  return <div className="Board">{squares}</div>;
+  let winner = selectedData.phase === "won" ? selectedData.turn : "";
+  return (
+    <div className="Board">
+      {squares}
+      <InfoBox phase={selectedData.phase} winner={winner} />
+    </div>
+  );
 }
 
 const boardCoord = (index: number) => {
