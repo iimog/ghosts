@@ -18,7 +18,7 @@ export interface Piece {
   alignment: Alignment;
 }
 
-type PlayerStats = { [alignment in Alignment]: number };
+export type PlayerStats = { [alignment in Alignment]: number };
 
 export interface State {
   board: Array<Piece | null>;

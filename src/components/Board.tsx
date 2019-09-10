@@ -6,6 +6,7 @@ import {
   Direction,
   Player,
   Phase,
+  PlayerStats,
   gameSlice
 } from "../logic/game";
 
@@ -35,7 +36,12 @@ function Square(props: {
   );
 }
 
-function InfoBox(props: { phase: Phase; turn: Player; winner: Player | "" }) {
+function InfoBox(props: {
+  phase: Phase;
+  turn: Player;
+  winner: Player | "";
+  stats: { [player in Player]: PlayerStats };
+}) {
   return (
     <div>
       <table>
@@ -51,6 +57,18 @@ function InfoBox(props: { phase: Phase; turn: Player; winner: Player | "" }) {
           <tr>
             <th>Winner:</th>
             <td>{props.winner}</td>
+          </tr>
+          <tr>
+            <th>A:</th>
+            <td>
+              good: {props.stats.A.good}, evil: {props.stats.A.evil}
+            </td>
+          </tr>
+          <tr>
+            <th>B:</th>
+            <td>
+              good: {props.stats.B.good}, evil: {props.stats.B.evil}
+            </td>
           </tr>
         </tbody>
       </table>
@@ -131,6 +149,7 @@ export default function Board() {
         phase={selectedData.phase}
         winner={winner}
         turn={selectedData.turn}
+        stats={selectedData.stats}
       />
     </div>
   );
