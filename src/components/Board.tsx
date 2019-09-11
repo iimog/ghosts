@@ -14,7 +14,7 @@ const mask = (player: Player) => (player === "A" ? "X" : "O");
 
 function Square(props: {
   piece: Piece | null;
-  onClick: (index: number) => void;
+  onClick: (e: any) => void;
   selected: boolean;
   turn: Player;
   masked: boolean;
@@ -96,7 +96,7 @@ export default function Board() {
   const [masked, setMasked] = React.useState(true);
   const isOwnGhost = (piece: Piece | null, turn: Player) =>
     piece !== null && piece.owner === turn;
-  const clickOnField = (index: number) => {
+  const clickOnField = (index: number): (e: MouseEvent) => void => {
     return () => {
       if (selectedData.phase === "won") {
         return;
@@ -150,7 +150,7 @@ export default function Board() {
     );
   }
 
-  let winner = selectedData.phase === "won" ? selectedData.turn : "";
+  let winner: Player | "" = selectedData.phase === "won" ? selectedData.turn : "";
   return (
     <div className="Board">
       {squares}
@@ -169,7 +169,7 @@ const boardCoord = (index: number) => {
   return { x: index % 6, y: Math.floor(index / 6) };
 };
 
-const MaskButton = props => {
+const MaskButton = (props: {masked: boolean, onClick: (e: any) => void}) => {
   const text = props.masked ? "Unmask!" : "Mask!";
   return <button {...props}> {text} </button>;
 };
