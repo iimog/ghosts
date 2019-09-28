@@ -129,7 +129,9 @@ export default function Board() {
         }
         if (selectedData.phase === "assignment") {
           dispatch(gameSlice.actions.markEvil(boardCoord(index)));
-          setMasked(true);
+          if (selectedData.stats[selectedData.turn].evil >= 3){
+            setMasked(true);
+          }
         }
       } else {
         if (selectedData.phase !== "running" || selectedField < 0) {

@@ -179,9 +179,13 @@ const gameLogic: Middleware<any, State> = api => next => action => {
       throw new Error("not so fast!");
     }
     api.dispatch(gameSlice.actions.ghostMarkedEvil(position));
-    api.dispatch(gameSlice.actions.turnChangedTo(other(state.turn)));
+    state = api.getState();
+    if (state.stats.A.evil === 4 && state.turn === "A") {
+      api.dispatch(gameSlice.actions.turnChangedTo(other(state.turn)));
+    }
     state = api.getState();
     if (state.stats.A.evil === 4 && state.stats.B.evil === 4) {
+      api.dispatch(gameSlice.actions.turnChangedTo(other(state.turn)));
       api.dispatch(gameSlice.actions.changePhase("running"));
     }
   }
