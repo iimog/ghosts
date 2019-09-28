@@ -7,9 +7,18 @@ import { store } from "./logic/game";
 
 import Board from "./components/Board";
 
+import io from 'socket.io-client';
+ 
+const socket = io.connect(`${location.protocol}//${location.host}`);
+socket.on('message', (data: string) => {
+  console.log(data)
+});
+socket.emit('message', "Player connected");
+//window.socket = socket;
+
 function App() {
   return (
-    <div className="App">
+    <div className="App" style={{textAlign: "center"}}>
       <h1>Spökspelet</h1>
       <h2>
         This is a fun board game for two:{" "}

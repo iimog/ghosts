@@ -25,6 +25,7 @@ export interface State {
   turn: Player;
   phase: Phase;
   stats: { [player in Player]: PlayerStats };
+  lastAction: { died: Alignment | null };
 }
 
 const initialState: State = {
@@ -46,7 +47,8 @@ const initialState: State = {
   stats: {
     A: { good: 8, evil: 0 },
     B: { good: 8, evil: 0 }
-  }
+  },
+  lastAction: {died: null}
 };
 
 export const gameSlice = createSlice({
@@ -57,6 +59,9 @@ export const gameSlice = createSlice({
       _state,
       _action: PayloadAction<Position & { direction: Direction }>
     ) {},
+    newMoveStarted(state) {
+      state.lastAction.died = null;
+    },
     ghostMarkedEvil(state, action: PayloadAction<Position>) {
       const ghost = selectGhost(state, action.payload)!;
       ghost.alignment = "evil";
@@ -67,6 +72,7 @@ export const gameSlice = createSlice({
       const ghost = selectGhost(state, action.payload)!;
       state.stats[ghost.owner][ghost.alignment]--;
       state.board[boardPosition(action.payload)] = null;
+      state.lastAction.died = ghost.alignment;
     },
     ghostMoved(
       state,
@@ -115,6 +121,7 @@ const gameLogic: Middleware<any, State> = api => next => action => {
     }
     const targetPos = targetPosition(position, direction);
     const target = selectGhost(state, targetPos);
+    api.dispatch(gameSlice.actions.newMoveStarted());
     if (target) {
       if (target.owner === state.turn) {
         throw new Error("do you want to kill your own ghost?");

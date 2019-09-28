@@ -9,6 +9,13 @@ import {
   PlayerStats,
   gameSlice
 } from "../logic/game";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { isFulfilled } from "q";
+import ghostA_src from '../pictures/ghost_yellow.svg';
+import ghostB_src from '../pictures/ghost_purple.svg';
+import evil_src from '../pictures/devil.svg';
+import good_src from '../pictures/angel.svg';
 
 const mask = (player: Player) => (player === "A" ? "X" : "O");
 
@@ -32,10 +39,22 @@ function Square(props: {
     }
   }
   let color = props.selected ? "orange" : "lightgrey";
+  let image = <img></img>;
+  if(owner && props.piece !== null){
+    let imageStyle = {};
+    if(props.piece.owner === "A"){
+      imageStyle = {transform: "scaleY(-1)", WebkitTransform: "scaleY(-1)"};
+    }
+    let image_path = "";
+    image_path = props.piece.alignment === "good" ? good_src : evil_src;
+    if (props.masked || (!props.gameOver && props.piece.owner !== props.turn)) {
+      image_path = (props.piece.owner === 'A' ? ghostA_src: ghostB_src);
+    }
+    image = <img src={image_path} style={imageStyle}></img>
+  }
   return (
     <button className="Square" {...props} style={{ backgroundColor: color }}>
-      {" "}
-      {owner}{" "}
+      {image}
     </button>
   );
 }
@@ -87,12 +106,14 @@ export default function Board() {
       board: state.board,
       turn: state.turn,
       phase: state.phase,
-      stats: state.stats
+      stats: state.stats,
+      diedLastTurn: state.lastAction.died
     }),
     shallowEqual
   );
   const dispatch = useDispatch();
   const [selectedField, setSelectedField] = React.useState(-1);
+  const [toastRequired, setToastRequired] = React.useState(false);
   const [masked, setMasked] = React.useState(true);
   const isOwnGhost = (piece: Piece | null, turn: Player) =>
     piece !== null && piece.owner === turn;
@@ -129,6 +150,7 @@ export default function Board() {
           );
           setSelectedField(-1);
           setMasked(true);
+          setToastRequired(true);
         } catch (e) {
           console.log(e.message);
         }
@@ -149,10 +171,24 @@ export default function Board() {
       />
     );
   }
+  if(toastRequired){
+    if(selectedData.diedLastTurn !== null){
+      let imgSrc = selectedData.diedLastTurn === "evil" ? evil_src : good_src;
+      toast(<img src={imgSrc}></img>, {
+        position: undefined,
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true
+      });
+    }
+    setToastRequired(false);
+  }
 
   let winner: Player | "" = selectedData.phase === "won" ? selectedData.turn : "";
   return (
-    <div className="Board">
+    <div className="Board" style={{display: "inline-block"}}>
       {squares}
       <InfoBox
         phase={selectedData.phase}
@@ -161,6 +197,16 @@ export default function Board() {
         stats={selectedData.stats}
       />
       <MaskButton masked={masked} onClick={() => setMasked(!masked)} />
+      <ToastContainer
+        position="bottom-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        draggable
+        pauseOnHover
+      />
     </div>
   );
 }

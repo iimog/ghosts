@@ -5,12 +5,12 @@
 
 .Square {
   border: solid 1px;
-  width: 60px;
-  height: 60px;
+  width: 90px;
+  height: 90px;
   float: left;
 }
 
 .Board {
-  width: 380px;
+  width: 540px;
   overflow: wrap;
 }
