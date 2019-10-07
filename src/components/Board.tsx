@@ -16,6 +16,10 @@ import ghostA_src from '../pictures/ghost_yellow.svg';
 import ghostB_src from '../pictures/ghost_purple.svg';
 import evil_src from '../pictures/devil.svg';
 import good_src from '../pictures/angel.svg';
+import crown_src from '../pictures/crown.svg';
+import circle_src from '../pictures/circle.svg';
+import circleA_src from '../pictures/circle_yellow.svg';
+import circleB_src from '../pictures/circle_purple.svg';
 
 const mask = (player: Player) => (player === "A" ? "X" : "O");
 
@@ -59,42 +63,31 @@ function Square(props: {
   );
 }
 
-function InfoBox(props: {
+function InfoBar(props: {
   phase: Phase;
   turn: Player;
   winner: Player | "";
   stats: { [player in Player]: PlayerStats };
+  player: Player;
 }) {
+  let good = [];
+  for(let i=0; i<props.stats[props.player].good; i++){
+    good.push(<img src={good_src} width="40px"></img>);
+  }
+  let evil = [];
+  for(let i=0; i<props.stats[props.player].evil; i++){
+    evil.push(<img src={evil_src} width="40px"></img>);
+  }
+  let status_src = (props.turn !== props.player ? circle_src : (props.player === "A" ? circleA_src : circleB_src));
+  if(props.winner === props.player){
+    status_src = crown_src;
+  }
+  let status = <img src={status_src} width="40px"></img>;
   return (
     <div>
-      <table>
-        <tbody>
-          <tr>
-            <th>Phase:</th>
-            <td>{props.phase}</td>
-          </tr>
-          <tr>
-            <th>Turn:</th>
-            <td>{props.turn}</td>
-          </tr>
-          <tr>
-            <th>Winner:</th>
-            <td>{props.winner}</td>
-          </tr>
-          <tr>
-            <th>A:</th>
-            <td>
-              good: {props.stats.A.good}, evil: {props.stats.A.evil}
-            </td>
-          </tr>
-          <tr>
-            <th>B:</th>
-            <td>
-              good: {props.stats.B.good}, evil: {props.stats.B.evil}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      {good}
+      {status}
+      {evil}
     </div>
   );
 }
@@ -191,12 +184,20 @@ export default function Board() {
   let winner: Player | "" = selectedData.phase === "won" ? selectedData.turn : "";
   return (
     <div className="Board" style={{display: "inline-block"}}>
-      {squares}
-      <InfoBox
+      <InfoBar
         phase={selectedData.phase}
         winner={winner}
         turn={selectedData.turn}
         stats={selectedData.stats}
+        player="A"
+      />
+      {squares}
+      <InfoBar
+        phase={selectedData.phase}
+        winner={winner}
+        turn={selectedData.turn}
+        stats={selectedData.stats}
+        player="B"
       />
       <MaskButton masked={masked} onClick={() => setMasked(!masked)} />
       <ToastContainer
