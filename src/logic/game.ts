@@ -27,7 +27,7 @@ export interface State {
   turn: Player;
   phase: Phase;
   stats: { [player in Player]: PlayerStats };
-  lastAction: { died: Alignment | null };
+  lastAction: { died: Piece | null };
   selectedField: null | Position;
 }
 
@@ -77,7 +77,7 @@ export const gameSlice = createSlice({
       const ghost = selectGhost(state, action.payload)!;
       state.stats[ghost.owner][ghost.alignment]--;
       state.board[boardPosition(action.payload)] = null;
-      state.lastAction.died = ghost.alignment;
+      state.lastAction.died = ghost;
     },
     ghostMoved(
       state,

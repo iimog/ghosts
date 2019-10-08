@@ -109,29 +109,27 @@ function InfoBar({ player }: { player: Player }) {
 }
 
 export default function Board() {
-  const selectedData = useSelector(
-    (state: State) => ({
-      diedLastTurn: state.lastAction.died
-    }),
+  const diedLastTurn = useSelector(
+    (state: State) => state.lastAction.died,
     shallowEqual
   );
-  const [toastRequired, setToastRequired] = React.useState(false);
   const [masked, setMasked] = React.useState(true);
 
-  if (toastRequired) {
-    if (selectedData.diedLastTurn !== null) {
-      let imgSrc = selectedData.diedLastTurn === "evil" ? evil_src : good_src;
-      toast(<img src={imgSrc}></img>, {
-        position: undefined,
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true
-      });
+  React.useEffect(() => {
+    if (diedLastTurn !== null) {
+      toast(
+        <img src={diedLastTurn.alignment === "evil" ? evil_src : good_src} />,
+        {
+          position: undefined,
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true
+        }
+      );
     }
-    setToastRequired(false);
-  }
+  }, [diedLastTurn]);
 
   return (
     <div className="Board" style={{ display: "inline-block" }}>
@@ -164,21 +162,4 @@ const boardCoord = (index: number) => {
 const MaskButton = (props: { masked: boolean; onClick: (e: any) => void }) => {
   const text = props.masked ? "Unmask!" : "Mask!";
   return <button {...props}> {text} </button>;
-};
-
-const getDirection = (source: number, target: number) => {
-  let diff: number = target - source;
-  if (diff === 1 && target % 6 !== 0) {
-    return "r";
-  }
-  if (diff === -1 && source % 6 !== 0) {
-    return "l";
-  }
-  if (diff === 6) {
-    return "d";
-  }
-  if (diff === -6) {
-    return "u";
-  }
-  return null;
 };
