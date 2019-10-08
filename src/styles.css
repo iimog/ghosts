@@ -2,15 +2,3 @@
   font-family: sans-serif;
   text-align: center;
 }
-
-.Square {
-  border: solid 1px;
-  width: 90px;
-  height: 90px;
-  float: left;
-}
-
-.Board {
-  width: 540px;
-  overflow: wrap;
-}

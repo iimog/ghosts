@@ -7,10 +7,10 @@ import {
   selectWinner,
   selectTurn,
   selectStats,
-  selectPhase,
   Position,
   selectPiece,
-  selectIsSelected
+  selectIsSelected,
+  Piece
 } from "../logic/game";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -22,6 +22,7 @@ import crown_src from "../pictures/crown.svg";
 import circle_src from "../pictures/circle.svg";
 import circleA_src from "../pictures/circle_yellow.svg";
 import circleB_src from "../pictures/circle_purple.svg";
+import styled from "@emotion/styled";
 
 const playerImages = {
   A: circleA_src,
@@ -30,46 +31,48 @@ const playerImages = {
 
 const mask = (player: Player) => (player === "A" ? "X" : "O");
 
+type SquareButtonProps = {
+  selected: boolean;
+  piece: Piece | null;
+  currentPlayer: Player;
+  masked: boolean;
+};
+const SquareButton = styled("button")<SquareButtonProps>(
+  ({ selected, piece, masked, currentPlayer }) => ({
+    color: selected ? "orange" : "lightgrey",
+    transform: `scaleY(${piece && piece.owner === "A" ? "-1" : "1"})`,
+    border: "solid 1px black",
+    backgroundSize: "contain",
+    backgroundRepeat: "no-repeat",
+    transition: "background-image 0.3s ease-in-out",
+    backgroundImage: !piece
+      ? "none"
+      : `url('${
+          masked || currentPlayer !== piece.owner
+            ? piece.owner === "A"
+              ? ghostA_src
+              : ghostB_src
+            : piece.alignment === "good"
+            ? good_src
+            : evil_src
+        }')`
+  })
+);
+
 function Square({ position, masked }: { position: Position; masked: boolean }) {
   const turn = useSelector(selectTurn);
   const piece = useSelector(selectPiece(position));
   const selected = useSelector(selectIsSelected(position));
-  const gameOver = useSelector(selectPhase) === "won";
   const dispatch = useDispatch();
 
-  let owner = "";
-  if (piece !== null) {
-    owner = piece.owner;
-    let ali = piece.alignment;
-    if (ali === "good") {
-      owner = owner.toLowerCase();
-    }
-    if (masked || (!gameOver && piece.owner !== turn)) {
-      owner = mask(piece.owner);
-    }
-  }
-  let color = selected ? "orange" : "lightgrey";
-  let image = <img></img>;
-  if (owner && piece !== null) {
-    let imageStyle = {};
-    if (piece.owner === "A") {
-      imageStyle = { transform: "scaleY(-1)", WebkitTransform: "scaleY(-1)" };
-    }
-    let image_path = "";
-    image_path = piece.alignment === "good" ? good_src : evil_src;
-    if (masked || (!gameOver && piece.owner !== turn)) {
-      image_path = piece.owner === "A" ? ghostA_src : ghostB_src;
-    }
-    image = <img src={image_path} style={imageStyle}></img>;
-  }
   return (
-    <button
-      className="Square"
+    <SquareButton
       onClick={() => dispatch(gameSlice.actions.selectField(position))}
-      style={{ backgroundColor: color }}
-    >
-      {image}
-    </button>
+      piece={piece}
+      selected={!!selected}
+      masked={masked}
+      currentPlayer={turn}
+    />
   );
 }
 
@@ -108,6 +111,15 @@ function InfoBar({ player }: { player: Player }) {
   );
 }
 
+const Grid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  grid-gap: 10px;
+  width: 600px;
+  height: 600px;
+`;
+
 export default function Board() {
   const diedLastTurn = useSelector(
     (state: State) => state.lastAction.died,
@@ -132,13 +144,15 @@ export default function Board() {
   }, [diedLastTurn]);
 
   return (
-    <div className="Board" style={{ display: "inline-block" }}>
+    <div style={{ display: "inline-block" }}>
       <InfoBar player="A" />
-      {Array(36)
-        .fill(undefined)
-        .map((_, i) => (
-          <Square key={i} position={boardCoord(i)} masked={masked} />
-        ))}
+      <Grid>
+        {Array(36)
+          .fill(undefined)
+          .map((_, i) => (
+            <Square key={i} position={boardCoord(i)} masked={masked} />
+          ))}
+      </Grid>
       <InfoBar player="B" />
       <MaskButton masked={masked} onClick={() => setMasked(!masked)} />
       <ToastContainer
