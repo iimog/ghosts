@@ -7,7 +7,9 @@
   "dependencies": {
     "@emotion/core": "^10.0.21",
     "@emotion/styled": "^10.0.17",
+    "@types/express": "^4.17.1",
     "@types/react-redux": "^7.1.2",
+    "@types/socket.io": "^2.1.4",
     "@types/socket.io-client": "^1.4.32",
     "express": "^4.15.2",
     "react": "16.8.4",
@@ -21,6 +23,7 @@
     "reselect": "^4.0.0",
     "socket.io": "^2.3.0",
     "socket.io-client": "^2.3.0",
+    "ts-node": "^8.4.1",
     "typescript": "3.6.2"
   },
   "devDependencies": {
@@ -32,7 +35,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "server": "ts-node index.ts",
+    "server-debug": "echo see ts-node-dev"
   },
   "browserslist": [
     ">0.2%",

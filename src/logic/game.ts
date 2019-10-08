@@ -95,7 +95,7 @@ export const gameSlice = createSlice({
   }
 });
 
-function isSelectFieldAction(
+export function isSelectFieldAction(
   action: Action
 ): action is ReturnType<typeof gameSlice["actions"]["selectField"]> {
   return action.type === gameSlice.actions.selectField.type;
@@ -114,6 +114,8 @@ function isMarkEvilAction(
 }
 
 const gameLogic: Middleware<any, State> = api => next => action => {
+  const result = next(action);
+
   if (isSelectFieldAction(action)) {
     let state = api.getState();
     const position = action.payload;
@@ -230,17 +232,20 @@ const gameLogic: Middleware<any, State> = api => next => action => {
     }
   }
 
-  return next(action);
+  return result;
 };
 
 function other(player: Player) {
   return player === "A" ? "B" : "A";
 }
 
-export const store = configureStore({
-  reducer: gameSlice.reducer,
-  middleware: [...getDefaultMiddleware(), gameLogic]
-});
+export const createStoreWithMiddleware = (
+  middlewares: Array<Middleware<any, State>> = []
+) =>
+  configureStore({
+    reducer: gameSlice.reducer,
+    middleware: [...getDefaultMiddleware(), gameLogic, ...middlewares]
+  });
 
 export const boardPosition = ({ x, y }: Position) => x + y * 6;
 
@@ -267,7 +272,7 @@ function print(state: State) {
   console.log(board);
 }
 
-print(store.getState());
+// print(store.getState());
 //store.dispatch(gameSlice.actions.markEvil({ x: 1, y: 1 }));
 //store.dispatch(gameSlice.actions.markEvil({ x: 1, y: 4 }));
 //store.dispatch(gameSlice.actions.markEvil({ x: 2, y: 1 }));
