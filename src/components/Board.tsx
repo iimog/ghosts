@@ -7,7 +7,11 @@ import {
   Player,
   Phase,
   PlayerStats,
-  gameSlice
+  gameSlice,
+  selectWinner,
+  selectTurn,
+  selectStats,
+  selectPhase
 } from "../logic/game";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -20,6 +24,11 @@ import crown_src from "../pictures/crown.svg";
 import circle_src from "../pictures/circle.svg";
 import circleA_src from "../pictures/circle_yellow.svg";
 import circleB_src from "../pictures/circle_purple.svg";
+
+const playerImages = {
+  A: circleA_src,
+  B: circleB_src
+};
 
 const mask = (player: Player) => (player === "A" ? "X" : "O");
 
@@ -76,36 +85,37 @@ function Square({
   );
 }
 
-function InfoBar(props: {
-  phase: Phase;
-  turn: Player;
-  winner: Player | "";
-  stats: { [player in Player]: PlayerStats };
-  player: Player;
-}) {
-  let good = [];
-  for (let i = 0; i < props.stats[props.player].good; i++) {
-    good.push(<img src={good_src} width="40px"></img>);
-  }
-  let evil = [];
-  for (let i = 0; i < props.stats[props.player].evil; i++) {
-    evil.push(<img src={evil_src} width="40px"></img>);
-  }
-  let status_src =
-    props.turn !== props.player
-      ? circle_src
-      : props.player === "A"
-      ? circleA_src
-      : circleB_src;
-  if (props.winner === props.player) {
-    status_src = crown_src;
-  }
-  let status = <img src={status_src} width="40px"></img>;
+function InfoBar({ player }: { player: Player }) {
+  const turn = useSelector(selectTurn);
+  const {
+    [player]: { good, evil }
+  } = useSelector(selectStats);
+  const winner = useSelector(selectWinner);
+  const isWinner = winner === player;
+  const isCurrentTurn = turn === player;
+
   return (
     <div>
-      {good}
-      {status}
-      {evil}
+      {Array(good)
+        .fill(undefined)
+        .map((_, i) => (
+          <img key={i} src={good_src} width="40px"></img>
+        ))}
+      <img
+        src={
+          isWinner
+            ? crown_src
+            : !isCurrentTurn
+            ? circle_src
+            : playerImages[player]
+        }
+        width="40px"
+      />
+      {Array(evil)
+        .fill(undefined)
+        .map((_, i) => (
+          <img key={i} src={evil_src} width="40px"></img>
+        ))}
     </div>
   );
 }
@@ -147,13 +157,7 @@ export default function Board() {
     selectedData.phase === "won" ? selectedData.turn : "";
   return (
     <div className="Board" style={{ display: "inline-block" }}>
-      <InfoBar
-        phase={selectedData.phase}
-        winner={winner}
-        turn={selectedData.turn}
-        stats={selectedData.stats}
-        player="A"
-      />
+      <InfoBar player="A" />
       {Array(36)
         .fill(undefined)
         .map((_, i) => (
@@ -168,13 +172,7 @@ export default function Board() {
             gameOver={selectedData.phase === "won"}
           />
         ))}
-      <InfoBar
-        phase={selectedData.phase}
-        winner={winner}
-        turn={selectedData.turn}
-        stats={selectedData.stats}
-        player="B"
-      />
+      <InfoBar player="B" />
       <MaskButton masked={masked} onClick={() => setMasked(!masked)} />
       <ToastContainer
         position="bottom-center"

@@ -7,6 +7,8 @@ import {
   Action
 } from "redux-starter-kit";
 
+import { createSelector } from "reselect";
+
 export type Player = "A" | "B";
 export type Alignment = "good" | "evil";
 export type Phase = "assignment" | "running" | "won";
@@ -48,7 +50,7 @@ const initialState: State = {
     A: { good: 8, evil: 0 },
     B: { good: 8, evil: 0 }
   },
-  lastAction: {died: null}
+  lastAction: { died: null }
 };
 
 export const gameSlice = createSlice({
@@ -254,3 +256,13 @@ print(store.getState());
 //store.dispatch(gameSlice.actions.markEvil({ x: 4, y: 1 }));
 //store.dispatch(gameSlice.actions.markEvil({ x: 4, y: 4 }));
 //print(store.getState());
+
+export const selectPhase = (state: State) => state.phase;
+export const selectTurn = (state: State) => state.turn;
+export const selectStats = (state: State) => state.stats;
+
+export const selectWinner = createSelector(
+  selectPhase,
+  selectTurn,
+  (phase, turn) => (phase === "won" ? turn : "")
+);
