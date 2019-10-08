@@ -2,20 +2,18 @@ import * as React from "react";
 import { shallowEqual, useSelector, useDispatch } from "react-redux";
 import {
   State,
-  Piece,
-  Direction,
   Player,
-  Phase,
-  PlayerStats,
   gameSlice,
   selectWinner,
   selectTurn,
   selectStats,
-  selectPhase
+  selectPhase,
+  Position,
+  selectPiece,
+  selectIsSelected
 } from "../logic/game";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { isFulfilled } from "q";
 import ghostA_src from "../pictures/ghost_yellow.svg";
 import ghostB_src from "../pictures/ghost_purple.svg";
 import evil_src from "../pictures/devil.svg";
@@ -32,23 +30,13 @@ const playerImages = {
 
 const mask = (player: Player) => (player === "A" ? "X" : "O");
 
-function Square({
-  piece,
-  fieldIndex,
-  onClickOnField,
-  selected,
-  turn,
-  masked,
-  gameOver
-}: {
-  piece: Piece | null;
-  fieldIndex: number;
-  onClickOnField: (fieldIndex: number) => void;
-  selected: boolean;
-  turn: Player;
-  masked: boolean;
-  gameOver: boolean;
-}) {
+function Square({ position, masked }: { position: Position; masked: boolean }) {
+  const turn = useSelector(selectTurn);
+  const piece = useSelector(selectPiece(position));
+  const selected = useSelector(selectIsSelected(position));
+  const gameOver = useSelector(selectPhase) === "won";
+  const dispatch = useDispatch();
+
   let owner = "";
   if (piece !== null) {
     owner = piece.owner;
@@ -77,7 +65,7 @@ function Square({
   return (
     <button
       className="Square"
-      onClick={() => onClickOnField(fieldIndex)}
+      onClick={() => dispatch(gameSlice.actions.selectField(position))}
       style={{ backgroundColor: color }}
     >
       {image}
@@ -123,20 +111,12 @@ function InfoBar({ player }: { player: Player }) {
 export default function Board() {
   const selectedData = useSelector(
     (state: State) => ({
-      board: state.board,
-      turn: state.turn,
-      phase: state.phase,
-      stats: state.stats,
       diedLastTurn: state.lastAction.died
     }),
     shallowEqual
   );
-  const dispatch = useDispatch();
-  const [selectedField, setSelectedField] = React.useState(-1);
   const [toastRequired, setToastRequired] = React.useState(false);
   const [masked, setMasked] = React.useState(true);
-  const isOwnGhost = (piece: Piece | null, turn: Player) =>
-    piece !== null && piece.owner === turn;
 
   if (toastRequired) {
     if (selectedData.diedLastTurn !== null) {
@@ -153,24 +133,13 @@ export default function Board() {
     setToastRequired(false);
   }
 
-  let winner: Player | "" =
-    selectedData.phase === "won" ? selectedData.turn : "";
   return (
     <div className="Board" style={{ display: "inline-block" }}>
       <InfoBar player="A" />
       {Array(36)
         .fill(undefined)
         .map((_, i) => (
-          <Square
-            key={i}
-            piece={selectedData.board[i]}
-            fieldIndex={i}
-            onClickOnField={clickOnField}
-            selected={selectedField === i}
-            turn={selectedData.turn}
-            masked={masked}
-            gameOver={selectedData.phase === "won"}
-          />
+          <Square key={i} position={boardCoord(i)} masked={masked} />
         ))}
       <InfoBar player="B" />
       <MaskButton masked={masked} onClick={() => setMasked(!masked)} />
@@ -186,48 +155,6 @@ export default function Board() {
       />
     </div>
   );
-
-  function clickOnField(index: number): void {
-    if (selectedData.phase === "won") {
-      return;
-    }
-    let piece = selectedData.board[index];
-    if (isOwnGhost(piece, selectedData.turn)) {
-      if (selectedData.phase === "running") {
-        setSelectedField(index);
-      }
-      if (selectedData.phase === "assignment") {
-        dispatch(gameSlice.actions.markEvil(boardCoord(index)));
-        if (selectedData.stats[selectedData.turn].evil >= 3) {
-          setMasked(true);
-        }
-      }
-    } else {
-      if (selectedData.phase !== "running" || selectedField < 0) {
-        return;
-      }
-      try {
-        let oldPos = boardCoord(selectedField);
-        let direction: Direction | null = getDirection(selectedField, index);
-        if (direction === null) {
-          return;
-        }
-        dispatch(
-          gameSlice.actions.move({
-            x: oldPos.x,
-            y: oldPos.y,
-            direction: direction
-          })
-        );
-        setSelectedField(-1);
-        setMasked(true);
-        setToastRequired(true);
-      } catch (e) {
-        console.log(e.message);
-      }
-      return;
-    }
-  }
 }
 
 const boardCoord = (index: number) => {

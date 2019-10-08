@@ -7,7 +7,7 @@ import {
   Action
 } from "redux-starter-kit";
 
-import { createSelector } from "reselect";
+import { createSelector, createSelectorCreator } from "reselect";
 
 export type Player = "A" | "B";
 export type Alignment = "good" | "evil";
@@ -28,6 +28,7 @@ export interface State {
   phase: Phase;
   stats: { [player in Player]: PlayerStats };
   lastAction: { died: Alignment | null };
+  selectedField: null | Position;
 }
 
 const initialState: State = {
@@ -50,17 +51,19 @@ const initialState: State = {
     A: { good: 8, evil: 0 },
     B: { good: 8, evil: 0 }
   },
-  lastAction: { died: null }
+  lastAction: { died: null },
+  selectedField: null
 };
 
 export const gameSlice = createSlice({
   initialState,
   reducers: {
+    selectField(_state, _action: PayloadAction<Position>) {},
     markEvil(_state, _action: PayloadAction<Position>) {},
-    move(
-      _state,
-      _action: PayloadAction<Position & { direction: Direction }>
-    ) {},
+    move(_state, _action: PayloadAction<Position>) {},
+    currentFieldSelected(state, { payload }: PayloadAction<Position | null>) {
+      state.selectedField = payload;
+    },
     newMoveStarted(state) {
       state.lastAction.died = null;
     },
@@ -78,13 +81,10 @@ export const gameSlice = createSlice({
     },
     ghostMoved(
       state,
-      {
-        payload: { direction, ...position }
-      }: PayloadAction<Position & { direction: Direction }>
+      { payload: { from, to } }: PayloadAction<{ from: Position; to: Position }>
     ) {
-      const ghost = selectGhost(state, position)!;
-      state.board[boardPosition(targetPosition(position, direction))] = ghost;
-      state.board[boardPosition(position)] = null;
+      state.board[boardPosition(to)] = selectGhost(state, from);
+      state.board[boardPosition(from)] = null;
     },
     turnChangedTo(state, action: PayloadAction<Player>) {
       state.turn = action.payload;
@@ -94,6 +94,12 @@ export const gameSlice = createSlice({
     }
   }
 });
+
+function isSelectFieldAction(
+  action: Action
+): action is ReturnType<typeof gameSlice["actions"]["selectField"]> {
+  return action.type === gameSlice.actions.selectField.type;
+}
 
 function isMoveAction(
   action: Action
@@ -108,9 +114,35 @@ function isMarkEvilAction(
 }
 
 const gameLogic: Middleware<any, State> = api => next => action => {
-  if (isMoveAction(action)) {
-    const { direction, ...position } = action.payload;
+  if (isSelectFieldAction(action)) {
     let state = api.getState();
+    const position = action.payload;
+    if (state.phase === "assignment") {
+      api.dispatch(gameSlice.actions.markEvil(position));
+    } else if (state.phase === "running") {
+      if (state.selectedField) {
+        const targetGhost = selectGhost(state, position);
+        if (targetGhost && targetGhost.owner === state.turn) {
+          api.dispatch(gameSlice.actions.currentFieldSelected(position));
+        } else if (positionEquals(state.selectedField, position)) {
+          api.dispatch(gameSlice.actions.currentFieldSelected(null));
+        } else {
+          api.dispatch(gameSlice.actions.move(position));
+        }
+      } else {
+        const selectedPiece = state.board[boardPosition(position)];
+        if (selectedPiece && selectedPiece.owner === state.turn) {
+          api.dispatch(gameSlice.actions.currentFieldSelected(position));
+        }
+      }
+    }
+  } else if (isMoveAction(action)) {
+    const targetPos = action.payload;
+    let state = api.getState();
+    const position = state.selectedField;
+    if (!position) {
+      throw new Error("there was no selection!");
+    }
     if (state.phase !== "running") {
       throw new Error("not in running phase!");
     }
@@ -121,7 +153,10 @@ const gameLogic: Middleware<any, State> = api => next => action => {
     if (ghost.owner !== state.turn) {
       throw new Error("not your ghost!");
     }
-    const targetPos = targetPosition(position, direction);
+    if (!isValidMove(position, targetPos)) {
+      throw new Error("that's a weird move!");
+    }
+
     const target = selectGhost(state, targetPos);
     api.dispatch(gameSlice.actions.newMoveStarted());
     if (target) {
@@ -130,7 +165,9 @@ const gameLogic: Middleware<any, State> = api => next => action => {
       }
       api.dispatch(gameSlice.actions.ghostKilled(targetPos));
     }
-    api.dispatch(gameSlice.actions.ghostMoved({ direction, ...position }));
+    api.dispatch(
+      gameSlice.actions.ghostMoved({ from: position, to: targetPos })
+    );
     state = api.getState();
     if (state.stats[other(state.turn)].good === 0) {
       api.dispatch(gameSlice.actions.changePhase("won"));
@@ -138,6 +175,7 @@ const gameLogic: Middleware<any, State> = api => next => action => {
     }
     state = api.getState();
 
+    api.dispatch(gameSlice.actions.currentFieldSelected(null));
     api.dispatch(gameSlice.actions.turnChangedTo(other(state.turn)));
 
     state = api.getState();
@@ -204,28 +242,11 @@ export const store = configureStore({
   middleware: [...getDefaultMiddleware(), gameLogic]
 });
 
-const boardPosition = ({ x, y }: Position) => x + y * 6;
-const targetPosition = ({ x, y }: Position, direction: Direction) => {
-  function assert(stillOnBoard: boolean) {
-    if (!stillOnBoard) {
-      throw new Error("you are leaving known lands!");
-    }
-  }
-  switch (direction) {
-    case "r":
-      assert(x < 5);
-      return { x: x + 1, y };
-    case "l":
-      assert(x > 0);
-      return { x: x - 1, y };
-    case "d":
-      assert(y < 5);
-      return { x, y: y + 1 };
-    case "u":
-      assert(y > 0);
-      return { x, y: y - 1 };
-  }
-};
+export const boardPosition = ({ x, y }: Position) => x + y * 6;
+
+function isValidMove(from: Position, to: Position) {
+  return Math.abs(from.x - to.x) + Math.abs(from.y - to.y) === 1;
+}
 
 const selectGhost = (state: State, position: Position) =>
   state.board[boardPosition(position)];
@@ -257,12 +278,23 @@ print(store.getState());
 //store.dispatch(gameSlice.actions.markEvil({ x: 4, y: 4 }));
 //print(store.getState());
 
+export function positionEquals(a: Position | null, b: Position | null) {
+  return a && b && a.x === b.x && a.y === b.y;
+}
+
 export const selectPhase = (state: State) => state.phase;
 export const selectTurn = (state: State) => state.turn;
 export const selectStats = (state: State) => state.stats;
-
+export const selectBoard = (state: State) => state.board;
+export const selectSelectedField = (state: State) => state.selectedField;
 export const selectWinner = createSelector(
   selectPhase,
   selectTurn,
   (phase, turn) => (phase === "won" ? turn : "")
 );
+
+export const selectPiece = (position: Position) => (state: State) =>
+  selectBoard(state)[boardPosition(position)];
+
+export const selectIsSelected = (position: Position) => (state: State) =>
+  positionEquals(selectSelectedField(state), position);
