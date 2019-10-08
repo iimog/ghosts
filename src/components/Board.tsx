@@ -9,55 +9,68 @@ import {
   PlayerStats,
   gameSlice
 } from "../logic/game";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { isFulfilled } from "q";
-import ghostA_src from '../pictures/ghost_yellow.svg';
-import ghostB_src from '../pictures/ghost_purple.svg';
-import evil_src from '../pictures/devil.svg';
-import good_src from '../pictures/angel.svg';
-import crown_src from '../pictures/crown.svg';
-import circle_src from '../pictures/circle.svg';
-import circleA_src from '../pictures/circle_yellow.svg';
-import circleB_src from '../pictures/circle_purple.svg';
+import ghostA_src from "../pictures/ghost_yellow.svg";
+import ghostB_src from "../pictures/ghost_purple.svg";
+import evil_src from "../pictures/devil.svg";
+import good_src from "../pictures/angel.svg";
+import crown_src from "../pictures/crown.svg";
+import circle_src from "../pictures/circle.svg";
+import circleA_src from "../pictures/circle_yellow.svg";
+import circleB_src from "../pictures/circle_purple.svg";
 
 const mask = (player: Player) => (player === "A" ? "X" : "O");
 
-function Square(props: {
+function Square({
+  piece,
+  fieldIndex,
+  onClickOnField,
+  selected,
+  turn,
+  masked,
+  gameOver
+}: {
   piece: Piece | null;
-  onClick: (e: any) => void;
+  fieldIndex: number;
+  onClickOnField: (fieldIndex: number) => void;
   selected: boolean;
   turn: Player;
   masked: boolean;
   gameOver: boolean;
 }) {
   let owner = "";
-  if (props.piece !== null) {
-    owner = props.piece.owner;
-    let ali = props.piece.alignment;
+  if (piece !== null) {
+    owner = piece.owner;
+    let ali = piece.alignment;
     if (ali === "good") {
       owner = owner.toLowerCase();
     }
-    if (props.masked || (!props.gameOver && props.piece.owner !== props.turn)) {
-      owner = mask(props.piece.owner);
+    if (masked || (!gameOver && piece.owner !== turn)) {
+      owner = mask(piece.owner);
     }
   }
-  let color = props.selected ? "orange" : "lightgrey";
+  let color = selected ? "orange" : "lightgrey";
   let image = <img></img>;
-  if(owner && props.piece !== null){
+  if (owner && piece !== null) {
     let imageStyle = {};
-    if(props.piece.owner === "A"){
-      imageStyle = {transform: "scaleY(-1)", WebkitTransform: "scaleY(-1)"};
+    if (piece.owner === "A") {
+      imageStyle = { transform: "scaleY(-1)", WebkitTransform: "scaleY(-1)" };
     }
     let image_path = "";
-    image_path = props.piece.alignment === "good" ? good_src : evil_src;
-    if (props.masked || (!props.gameOver && props.piece.owner !== props.turn)) {
-      image_path = (props.piece.owner === 'A' ? ghostA_src: ghostB_src);
+    image_path = piece.alignment === "good" ? good_src : evil_src;
+    if (masked || (!gameOver && piece.owner !== turn)) {
+      image_path = piece.owner === "A" ? ghostA_src : ghostB_src;
     }
-    image = <img src={image_path} style={imageStyle}></img>
+    image = <img src={image_path} style={imageStyle}></img>;
   }
   return (
-    <button className="Square" {...props} style={{ backgroundColor: color }}>
+    <button
+      className="Square"
+      onClick={() => onClickOnField(fieldIndex)}
+      style={{ backgroundColor: color }}
+    >
       {image}
     </button>
   );
@@ -71,15 +84,20 @@ function InfoBar(props: {
   player: Player;
 }) {
   let good = [];
-  for(let i=0; i<props.stats[props.player].good; i++){
+  for (let i = 0; i < props.stats[props.player].good; i++) {
     good.push(<img src={good_src} width="40px"></img>);
   }
   let evil = [];
-  for(let i=0; i<props.stats[props.player].evil; i++){
+  for (let i = 0; i < props.stats[props.player].evil; i++) {
     evil.push(<img src={evil_src} width="40px"></img>);
   }
-  let status_src = (props.turn !== props.player ? circle_src : (props.player === "A" ? circleA_src : circleB_src));
-  if(props.winner === props.player){
+  let status_src =
+    props.turn !== props.player
+      ? circle_src
+      : props.player === "A"
+      ? circleA_src
+      : circleB_src;
+  if (props.winner === props.player) {
     status_src = crown_src;
   }
   let status = <img src={status_src} width="40px"></img>;
@@ -93,7 +111,6 @@ function InfoBar(props: {
 }
 
 export default function Board() {
-  let squares = Array(36);
   const selectedData = useSelector(
     (state: State) => ({
       board: state.board,
@@ -110,64 +127,9 @@ export default function Board() {
   const [masked, setMasked] = React.useState(true);
   const isOwnGhost = (piece: Piece | null, turn: Player) =>
     piece !== null && piece.owner === turn;
-  const clickOnField = (index: number): (e: MouseEvent) => void => {
-    return () => {
-      if (selectedData.phase === "won") {
-        return;
-      }
-      let piece = selectedData.board[index];
-      if (isOwnGhost(piece, selectedData.turn)) {
-        if (selectedData.phase === "running") {
-          setSelectedField(index);
-        }
-        if (selectedData.phase === "assignment") {
-          dispatch(gameSlice.actions.markEvil(boardCoord(index)));
-          if (selectedData.stats[selectedData.turn].evil >= 3){
-            setMasked(true);
-          }
-        }
-      } else {
-        if (selectedData.phase !== "running" || selectedField < 0) {
-          return;
-        }
-        try {
-          let oldPos = boardCoord(selectedField);
-          let direction: Direction | null = getDirection(selectedField, index);
-          if (direction === null) {
-            return;
-          }
-          dispatch(
-            gameSlice.actions.move({
-              x: oldPos.x,
-              y: oldPos.y,
-              direction: direction
-            })
-          );
-          setSelectedField(-1);
-          setMasked(true);
-          setToastRequired(true);
-        } catch (e) {
-          console.log(e.message);
-        }
-        return;
-      }
-    };
-  };
-  for (let i = 0; i < 36; i++) {
-    squares[i] = (
-      <Square
-        key={i}
-        piece={selectedData.board[i]}
-        onClick={clickOnField(i)}
-        selected={selectedField === i}
-        turn={selectedData.turn}
-        masked={masked}
-        gameOver={selectedData.phase === "won"}
-      />
-    );
-  }
-  if(toastRequired){
-    if(selectedData.diedLastTurn !== null){
+
+  if (toastRequired) {
+    if (selectedData.diedLastTurn !== null) {
       let imgSrc = selectedData.diedLastTurn === "evil" ? evil_src : good_src;
       toast(<img src={imgSrc}></img>, {
         position: undefined,
@@ -181,9 +143,10 @@ export default function Board() {
     setToastRequired(false);
   }
 
-  let winner: Player | "" = selectedData.phase === "won" ? selectedData.turn : "";
+  let winner: Player | "" =
+    selectedData.phase === "won" ? selectedData.turn : "";
   return (
-    <div className="Board" style={{display: "inline-block"}}>
+    <div className="Board" style={{ display: "inline-block" }}>
       <InfoBar
         phase={selectedData.phase}
         winner={winner}
@@ -191,7 +154,20 @@ export default function Board() {
         stats={selectedData.stats}
         player="A"
       />
-      {squares}
+      {Array(36)
+        .fill(undefined)
+        .map((_, i) => (
+          <Square
+            key={i}
+            piece={selectedData.board[i]}
+            fieldIndex={i}
+            onClickOnField={clickOnField}
+            selected={selectedField === i}
+            turn={selectedData.turn}
+            masked={masked}
+            gameOver={selectedData.phase === "won"}
+          />
+        ))}
       <InfoBar
         phase={selectedData.phase}
         winner={winner}
@@ -212,13 +188,55 @@ export default function Board() {
       />
     </div>
   );
+
+  function clickOnField(index: number): void {
+    if (selectedData.phase === "won") {
+      return;
+    }
+    let piece = selectedData.board[index];
+    if (isOwnGhost(piece, selectedData.turn)) {
+      if (selectedData.phase === "running") {
+        setSelectedField(index);
+      }
+      if (selectedData.phase === "assignment") {
+        dispatch(gameSlice.actions.markEvil(boardCoord(index)));
+        if (selectedData.stats[selectedData.turn].evil >= 3) {
+          setMasked(true);
+        }
+      }
+    } else {
+      if (selectedData.phase !== "running" || selectedField < 0) {
+        return;
+      }
+      try {
+        let oldPos = boardCoord(selectedField);
+        let direction: Direction | null = getDirection(selectedField, index);
+        if (direction === null) {
+          return;
+        }
+        dispatch(
+          gameSlice.actions.move({
+            x: oldPos.x,
+            y: oldPos.y,
+            direction: direction
+          })
+        );
+        setSelectedField(-1);
+        setMasked(true);
+        setToastRequired(true);
+      } catch (e) {
+        console.log(e.message);
+      }
+      return;
+    }
+  }
 }
 
 const boardCoord = (index: number) => {
   return { x: index % 6, y: Math.floor(index / 6) };
 };
 
-const MaskButton = (props: {masked: boolean, onClick: (e: any) => void}) => {
+const MaskButton = (props: { masked: boolean; onClick: (e: any) => void }) => {
   const text = props.masked ? "Unmask!" : "Mask!";
   return <button {...props}> {text} </button>;
 };
